@@ -1,0 +1,7 @@
+<TextureAtlas imagePath="sprites.png">
+	<SubTexture name="DoorClose.png" x="34" y="34" width="32" height="32"/>
+	<SubTexture name="DoorOpen.png" x="0" y="34" width="32" height="32"/>
+	<SubTexture name="Down.png" x="0" y="0" width="32" height="32"/>
+	<SubTexture name="Up.png" x="34" y="0" width="32" height="32"/>
+	<SubTexture name="gold.png" x="0" y="68" width="32" height="32"/>
+</TextureAtlas>
