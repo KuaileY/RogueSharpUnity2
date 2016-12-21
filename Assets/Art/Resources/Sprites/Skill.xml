@@ -1,0 +1,8 @@
+<TextureAtlas imagePath="sprites.png">
+	<SubTexture name="Fireball.png" x="0" y="68" width="32" height="32"/>
+	<SubTexture name="HealSelf.png" x="34" y="34" width="32" height="32"/>
+	<SubTexture name="LightningBolt.png" x="34" y="0" width="32" height="32"/>
+	<SubTexture name="MagicMissile.png" x="34" y="68" width="32" height="32"/>
+	<SubTexture name="RevealMap.png" x="0" y="34" width="32" height="32"/>
+	<SubTexture name="Whirlwind.png" x="0" y="0" width="32" height="32"/>
+</TextureAtlas>

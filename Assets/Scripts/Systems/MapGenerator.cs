@@ -15,6 +15,7 @@ public class MapGenerator
     private readonly int _roomMinSize;
     private readonly int _level;
     private readonly DungeonMap _map;
+    private readonly EquipmentGenerator _equipmentGenerator;
 
     public MapGenerator(int width, int height, int maxRooms, int roomMaxSize, int roomMinSize, int level)
     {
@@ -25,6 +26,7 @@ public class MapGenerator
         _roomMinSize = roomMinSize;
         _level = level;
         _map = new DungeonMap();
+        _equipmentGenerator = new EquipmentGenerator(level);
     }
 
     public DungeonMap CreateMap()
@@ -32,12 +34,12 @@ public class MapGenerator
         Clean();
         _map.Initialize(_width, _height);
 
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < _maxRooms; i++)
         {
-            int roomWidth = Game.Random.Next(5, 7);
-            int roomHeight = Game.Random.Next(5, 7);
-            int roomXPosition = Game.Random.Next(0, 29 - roomWidth);
-            int roomYPosition = Game.Random.Next(0, 29 - roomHeight);
+            int roomWidth = Game.Random.Next(_roomMinSize, _roomMaxSize);
+            int roomHeight = Game.Random.Next(_roomMinSize, _roomMaxSize);
+            int roomXPosition = Game.Random.Next(0, _width - roomWidth - 1);
+            int roomYPosition = Game.Random.Next(0, _height - roomHeight - 1);
 
             var newRoom = new Rectangle(roomXPosition, roomYPosition, roomWidth, roomHeight);
             bool newRoomIntersects = _map.Rooms.Any(room => newRoom.Intersects(room));
@@ -86,6 +88,12 @@ public class MapGenerator
         PlacePlayer();
 
         PlaceMonsters();
+
+        PlaceEquipment();
+
+        PlaceItems();
+
+        PlaceAbility();
 
         return _map;
     }
@@ -149,6 +157,90 @@ public class MapGenerator
         _map.AddPlayer(player);
     }
 
+    private void PlaceAbility()
+    {
+        if (_level == 1 || _level % 3 == 0)
+        {
+            Ability ability;
+            try
+            {
+                ability = AbilityGenerator.CreateAbility();
+            }
+            catch (InvalidOperationException)
+            {
+                return;
+            }
+            int roomIndex = Game.Random.Next(0, _map.Rooms.Count - 1);
+            Point location = _map.GetRandomLocationInRoom(_map.Rooms[roomIndex]);
+            ability.go = GameObject.Instantiate<GameObject>(Game.Items[ability.Name],
+                            new Vector2(location.X, location.Y), Quaternion.identity);
+            ability.go.transform.SetParent(Game.itemsHolder);
+            ability.go.GetComponent<Renderer>().enabled = false;
+            Game.ItemsTiles[location.X, location.Y] = ability;
+            _map.AddTreasure(location.X, location.Y, ability);
+        }
+    }
+
+    private void PlaceEquipment()
+    {
+        foreach (var room in _map.Rooms)
+        {
+            if (Dice.Roll("1D10") < 3)
+            {
+                if (_map.DoesRoomHaveWalkableSpace(room))
+                {
+                    Point randomRoomLocation = _map.GetRandomLocationInRoom(room);
+                    if (randomRoomLocation != null)
+                    {
+                        Equipment equipment;
+                        try
+                        {
+                            equipment = _equipmentGenerator.CreateEquipment();
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // no more equipment to generate so just quit adding to this level
+                            return;
+                        }
+                        Point location = _map.GetRandomLocationInRoom(room);
+                        equipment.go = GameObject.Instantiate<GameObject>(Game.Items[equipment.Name],
+                            new Vector2(location.X, location.Y), Quaternion.identity);
+                        equipment.go.transform.SetParent(Game.itemsHolder);
+                        equipment.go.GetComponent<Renderer>().enabled = false;
+                        Game.ItemsTiles[location.X, location.Y] = equipment;
+                        _map.AddTreasure(location.X, location.Y, equipment);
+                    }
+                }
+            }
+        }
+    }
+
+    private void PlaceItems()
+    {
+        foreach (var room in _map.Rooms)
+        {
+            if (Dice.Roll("1D10") < 3)
+            {
+                if (_map.DoesRoomHaveWalkableSpace(room))
+                {
+                    Point randomRoomLocation = _map.GetRandomLocationInRoom(room);
+                    if (randomRoomLocation != null)
+                    {
+                        Item item = ItemGenerator.CreateItem();
+                        Point location = _map.GetRandomLocationInRoom(room);
+
+                        item.go = GameObject.Instantiate<GameObject>(Game.Items[item.Name],
+                            new Vector2(location.X, location.Y), Quaternion.identity);
+                        item.go.transform.SetParent(Game.itemsHolder);
+                        item.go.GetComponent<Renderer>().enabled = false;
+                        Game.ItemsTiles[location.X, location.Y] = item;
+                        _map.AddTreasure(location.X, location.Y, item);
+                    }
+                }
+            }
+        }
+    }
+
     private void CreateHorizontalTunnel(int xStart, int xEnd, int yPosition)
     {
         for (int x = Math.Min(xStart, xEnd); x <= Math.Max(xStart, xEnd); x++)
@@ -182,7 +274,7 @@ public class MapGenerator
             if (IsPotentialDoor(cell))
             {
                 _map.SetCellProperties(cell.X, cell.Y, false, true);
-                var door = new Item();
+                var door = new Entry();
                 var instance = GameObject.Instantiate<GameObject>(Game.Items["Door"], new Vector2(cell.X, cell.Y), Quaternion.identity);
                 door.Stat = "close";
                 door.go = instance;
@@ -249,6 +341,7 @@ public class MapGenerator
         _map._monsters.Clear();
         _map.Doors.Clear();
         _map.Rooms.Clear();
+        _map._treasurePiles.Clear();
     }
 
 }

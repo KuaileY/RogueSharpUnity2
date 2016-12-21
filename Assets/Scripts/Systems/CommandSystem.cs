@@ -157,24 +157,25 @@ public class CommandSystem
         }
         else if (defender is Monster)
         {
-//             if (defender.Head != null && defender.Head != HeadEquipment.None())
-//             {
-//                 Game.DungeonMap.AddTreasure(defender.X, defender.Y, defender.Head);
-//             }
-//             if (defender.Body != null && defender.Body != BodyEquipment.None())
-//             {
-//                 Game.DungeonMap.AddTreasure(defender.X, defender.Y, defender.Body);
-//             }
-//             if (defender.Hand != null && defender.Hand != HandEquipment.None())
-//             {
-//                 Game.DungeonMap.AddTreasure(defender.X, defender.Y, defender.Hand);
-//             }
-//             if (defender.Feet != null && defender.Feet != FeetEquipment.None())
-//             {
-//                 Game.DungeonMap.AddTreasure(defender.X, defender.Y, defender.Feet);
-//             }
-//             Game.DungeonMap.AddGold(defender.X, defender.Y, defender.Gold);
+            if (defender.Head != null && defender.Head != HeadEquipment.None())
+            {
+                Game.DungeonMap.AddTreasure(defender.X, defender.Y, defender.Head);
+            }
+            if (defender.Body != null && defender.Body != BodyEquipment.None())
+            {
+                Game.DungeonMap.AddTreasure(defender.X, defender.Y, defender.Body);
+            }
+            if (defender.Hand != null && defender.Hand != HandEquipment.None())
+            {
+                Game.DungeonMap.AddTreasure(defender.X, defender.Y, defender.Hand);
+            }
+            if (defender.Feet != null && defender.Feet != FeetEquipment.None())
+            {
+                Game.DungeonMap.AddTreasure(defender.X, defender.Y, defender.Feet);
+            }
+
             Game.DungeonMap.RemoveMonster((Monster)defender);
+            Game.DungeonMap.AddGold(defender.X, defender.Y, defender.Gold);
 
             Game.MessageLog.Add(string.Format("  {0} died and dropped {1} gold", defender.Name, defender.Gold));
         }
@@ -218,9 +219,76 @@ public class CommandSystem
         }
     }
 
+    public bool HandleKey(KeyCode key)
+    {
+        if (key == KeyCode.H)
+        {
+            return Game.Player.QAbility.Perform();
+        }
+        if (key == KeyCode.J)
+        {
+            return Game.Player.WAbility.Perform();
+        }
+        if (key == KeyCode.K)
+        {
+            return Game.Player.EAbility.Perform();
+        }
+        if (key == KeyCode.L)
+        {
+            return Game.Player.RAbility.Perform();
+        }
+
+
+        bool didUseItem = false;
+        if (key == KeyCode.Alpha1)
+        {
+            didUseItem = Game.Player.Item1.Use();
+        }
+        else if (key == KeyCode.Alpha2)
+        {
+            didUseItem = Game.Player.Item2.Use();
+        }
+        else if (key == KeyCode.Alpha3)
+        {
+            didUseItem = Game.Player.Item3.Use();
+        }
+        else if (key == KeyCode.Alpha4)
+        {
+            didUseItem = Game.Player.Item4.Use();
+        }
+
+        if (didUseItem)
+        {
+            RemoveItemsWithNoRemainingUses();
+        }
+
+        return didUseItem;
+    }
+
+    private static void RemoveItemsWithNoRemainingUses()
+    {
+        if (Game.Player.Item1.RemainingUses <= 0)
+        {
+            Game.Player.Item1 = new NoItem();
+        }
+        if (Game.Player.Item2.RemainingUses <= 0)
+        {
+            Game.Player.Item2 = new NoItem();
+        }
+        if (Game.Player.Item3.RemainingUses <= 0)
+        {
+            Game.Player.Item3 = new NoItem();
+        }
+        if (Game.Player.Item4.RemainingUses <= 0)
+        {
+            Game.Player.Item4 = new NoItem();
+        }
+    }
+
     public void EndPlayerTurn()
     {
         IsPlayerTurn = false;
+        Game.Player.Tick();
     }
 
 }

@@ -9,8 +9,8 @@ using Random = UnityEngine.Random;
 
 public class Game : MonoBehaviour
 {
-    const int _width=60;
-    const int _height=45;
+    const int _width=80;
+    const int _height=60;
     
     private static int _mapLevel = 1;
     private static bool _renderRequired = true;
@@ -21,19 +21,24 @@ public class Game : MonoBehaviour
     public static MessageLog MessageLog { get; private set; }
     public static CommandSystem CommandSystem { get; private set; }
     public static SchedulingSystem SchedulingSystem { get; private set; }
+    public static TargetingSystem TargetingSystem { get; private set; }
+    public static GameObject AbilitiesItems { get; set; }
     public static GameObject MonsterStat { get; set; }
     public static GameObject MonsterItem { get; set; }
     public static GameObject PlayerStat { get; set; }
+    public static GameObject EquipmentItems { get; set; }
+    public static GameObject ItemItems { get; set; }
     public static Player Player { get; set; }
     public static IRandom Random { get; private set; }
 
 
 
     public static GameObject[,] groundTiles;
-    public static Item[,] ItemsTiles;
+    public static Entry[,] ItemsTiles;
 
     public static Transform boardHolder;
     public static Transform itemsHolder;
+    public static Transform effectsHolder;
     private float _lastKeyPressTime;
     public float KeyPressDelay = 0.2f;
     // Use this for initialization
@@ -56,7 +61,19 @@ public class Game : MonoBehaviour
         bool didPlayerAct = false;
         if (Input.anyKeyDown || Time.time - _lastKeyPressTime > KeyPressDelay)
         {
-            if (CommandSystem.IsPlayerTurn)
+            if (TargetingSystem.IsPlayerTargeting)
+            {
+                if (Input.anyKeyDown)
+                {
+                    _renderRequired = true;
+                    foreach (KeyCode vKey in System.Enum.GetValues(typeof(KeyCode)))
+                    {
+                        if (Input.GetKey(vKey))
+                            TargetingSystem.HandleKey(vKey);
+                    }
+                }
+            }
+            else if (CommandSystem.IsPlayerTurn)
             {
                 var playerTransform = Player.go.transform;
                 _lastKeyPressTime = Time.time;
@@ -92,6 +109,15 @@ public class Game : MonoBehaviour
                         didPlayerAct = true;
                     }
                 }
+                else
+                {
+                    foreach (KeyCode vKey in System.Enum.GetValues(typeof(KeyCode)))
+                    {
+                        if (Input.GetKey(vKey))
+                            didPlayerAct = CommandSystem.HandleKey(vKey);
+                    }
+                }
+
 
                 if (didPlayerAct)
                 {
@@ -119,6 +145,8 @@ public class Game : MonoBehaviour
 
             DungeonMap.Draw();
             MessageLog.Draw();
+            TargetingSystem.Draw();
+
             _renderRequired = false;
         }
     }
@@ -126,6 +154,7 @@ public class Game : MonoBehaviour
     void Load()
     {
         Items = new Dictionary<string, GameObject>();
+        Items.Add("None", null);
         foreach (var item in Enum.GetValues(typeof(Res.ItemGos)))
         {
             var name = item.ToString();
@@ -139,6 +168,9 @@ public class Game : MonoBehaviour
         Random = new DotNetRandom(seed);
 
         PlayerStat = GameObject.Find("playerStat");
+        EquipmentItems = GameObject.Find("equipmentItems");
+        AbilitiesItems = GameObject.Find("abilitiesItems");
+        ItemItems = GameObject.Find("itemItems");
         MonsterStat = GameObject.Find("monsterStat");
         MonsterItem = Resources.Load<GameObject>("Prefabs/monsterItem");
 
@@ -151,12 +183,14 @@ public class Game : MonoBehaviour
         MessageLog.Add(string.Format("Level created with seed '{0}'", seed));
 
         groundTiles = new GameObject[_width, _height];
-        ItemsTiles = new Item[_width, _height];
+        ItemsTiles = new Entry[_width, _height];
 
         boardHolder = new GameObject("boardHolder").transform;
         itemsHolder = new GameObject("itemsHolder").transform;
+        effectsHolder = new GameObject("effectsHolder").transform;
 
         CommandSystem = new CommandSystem();
+        TargetingSystem = new TargetingSystem();
     }
 
 

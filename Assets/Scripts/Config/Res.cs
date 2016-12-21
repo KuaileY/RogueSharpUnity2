@@ -5,26 +5,44 @@ public static class Res
     public enum ItemGos
     {
         Axe,
-        ChainArmor,
-        ChainBoots,
-        ChainHelmet,
+        ChainA,
+        ChainB,
+        ChainH,
         Dagger,
-        LeatherArmor,
-        LeatherBoots,
-        LeatherHelmet,
-        PlateArmor,
-        PlateBoots,
-        PlateHelmet,
+        LeatherA,
+        LeatherB,
+        LeatherH,
+        PlateA,
+        PlateB,
+        PlateH,
         Sword,
+        H2Sword,
+        //
         Gold,
         Door,
         Up,
         Down,
-
+        //
+        ArmorScroll,
+        DestructionWand,
+        HealingPotion,
+        MagicMap,
+        TeleportScroll,
+        Whetstone,
+        //
+        Fireball,
+        HealSelf,
+        LightningBolt,
+        MagicMissile,
+        RevealMap,
+        Whirlwind,
+        //
         Goblin,
         Kobold,
         Ooze,
-
+        //
+        Effect,
+        //
         Player
     }
 }

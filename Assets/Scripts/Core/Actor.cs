@@ -6,8 +6,21 @@ using RogueSharp;
 using UnityEngine;
 
 
-public class Actor:Item, IScheduleable
+public class Actor:Entry, IScheduleable
 {
+    public Actor()
+    {
+        Head = HeadEquipment.None();
+        Body = BodyEquipment.None();
+        Hand = HandEquipment.None();
+        Feet = FeetEquipment.None();
+    }
+
+    public HeadEquipment Head { get; set; }
+    public BodyEquipment Body { get; set; }
+    public HandEquipment Hand { get; set; }
+    public FeetEquipment Feet { get; set; }
+
     private int _attack;
     private int _attackChance;
     private int _awareness;
@@ -21,33 +34,33 @@ public class Actor:Item, IScheduleable
 
     public int Attack
     {
-        get { return _attack; }
+        get { return _attack + Head.Attack + Body.Attack + Hand.Attack + Feet.Attack; }
         set { _attack = value; }
     }
 
     public int AttackChance
     {
-        get { return _attackChance; }
+        get { return _attackChance + Head.AttackChance + Body.AttackChance + Hand.AttackChance + Feet.AttackChance; }
         set { _attackChance = value; }
     }
     public int Awareness
     {
-        get { return _awareness; }
+        get { return _awareness + Head.Awareness + Body.Awareness + Hand.Awareness + Feet.Awareness; }
         set { _awareness = value; }
     }
     public int Defense
     {
-        get { return _defense; }
+        get { return _defense + Head.Defense + Body.Defense + Hand.Defense + Feet.Defense; }
         set { _defense = value; }
     }
     public int DefenseChance
     {
-        get { return _defenseChance; }
+        get { return _defenseChance + Head.DefenseChance + Body.DefenseChance + Hand.DefenseChance + Feet.DefenseChance; }
         set { _defenseChance = value; }
     }
     public int Gold
     {
-        get { return _gold; }
+        get { return _gold + Head.Gold + Body.Gold + Hand.Gold + Feet.Gold; }
         set { _gold = value; }
     }
 
@@ -65,7 +78,7 @@ public class Actor:Item, IScheduleable
 
     public int MaxHealth
     {
-        get { return _maxHealth; }
+        get { return _maxHealth + Head.MaxHealth + Body.MaxHealth + Hand.MaxHealth + Feet.MaxHealth; }
         set{_maxHealth = value;}
     }
 
@@ -77,12 +90,9 @@ public class Actor:Item, IScheduleable
 
     public int Speed
     {
-        get{return _speed;}
+        get{return _speed + Head.Speed + Body.Speed + Hand.Speed + Feet.Speed; }
         set{_speed = value;}
     }
-
-    public int X { get; set; }
-    public int Y { get; set; }
 
     public void Draw(IMap map)
     {

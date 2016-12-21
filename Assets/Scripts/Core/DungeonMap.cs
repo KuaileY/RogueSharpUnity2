@@ -7,18 +7,20 @@ using UnityEngine;
 public class DungeonMap:Map
 {
     public List<Monster> _monsters;
+    public List<TreasurePile> _treasurePiles;
     public List<Rectangle> Rooms;
-    public List<Item> Doors;
+    public List<Entry> Doors;
     public Stairs StairsUp;
     public Stairs StairsDown;
 
     public DungeonMap()
     {
         _monsters = new List<Monster>();
+        _treasurePiles = new List<TreasurePile>();
         Game.SchedulingSystem.Clear();
 
         Rooms = new List<Rectangle>();
-        Doors = new List<Item>();
+        Doors = new List<Entry>();
     }
 
     public void AddMonster(Monster monster)
@@ -56,6 +58,12 @@ public class DungeonMap:Map
         });
     }
 
+    public IEnumerable<Point> GetMonsterLocationsInFieldOfView()
+    {
+        return _monsters.Where(monster => IsInFov(monster.X, monster.Y))
+            .Select(m => new Point { X = m.X, Y = m.Y });
+    }
+
     public Point GetRandomLocation()
     {
         int roomNumber = Game.Random.Next(0, Rooms.Count - 1);
@@ -78,6 +86,11 @@ public class DungeonMap:Map
             GetRandomLocationInRoom(room);
         }
         return new Point(x, y);
+    }
+
+    public void AddTreasure(int x, int y, ITreasure treasure)
+    {
+        _treasurePiles.Add(new TreasurePile(x, y, treasure));
     }
 
     public bool DoesRoomHaveWalkableSpace(Rectangle room)
@@ -112,7 +125,7 @@ public class DungeonMap:Map
     void UpdatePlayerFieldOfView()
     {
         Player player = Game.Player;
-        ComputeFov((int)player.X, (int)player.Y, 8, true);
+        ComputeFov((int)player.X, (int)player.Y, player.Awareness, true);
 
         foreach (var cell in GetAllCells())
         {
@@ -124,7 +137,7 @@ public class DungeonMap:Map
 
     }
 
-    public Item GetDoor(int x, int y)
+    public Entry GetDoor(int x, int y)
     {
         return Doors.SingleOrDefault(d => d.go.transform.position.x == x && d.go.transform.position.y == y);
     }
@@ -138,6 +151,18 @@ public class DungeonMap:Map
             var cell = GetCell(x, y);
             SetCellProperties(x, y, true, true, cell.IsExplored);
             door.go.GetComponent<Animator>().SetTrigger("Open");
+        }
+    }
+
+    public void AddGold(int x, int y, int amount)
+    {
+        if (amount > 0)
+        {
+            var gold = new Gold(amount);
+            gold.go= GameObject.Instantiate<GameObject>(Game.Items[gold.Name], new Vector2(x, y), Quaternion.identity);
+            gold.go.transform.SetParent(Game.itemsHolder);
+            Game.ItemsTiles[x, y] = gold;
+            AddTreasure(x, y, gold);
         }
     }
 
@@ -162,7 +187,9 @@ public class DungeonMap:Map
 
         Player player = Game.Player;
         player.DrawStats();
-
+        player.DrawInventoryE();
+        player.DrawInventoryA();
+        player.DrawInventoryI();
     }
 
     void DrawGround()
@@ -230,6 +257,7 @@ public class DungeonMap:Map
     {
         if (GetCell(x, y).IsWalkable)
         {
+            PickUpTreasure(actor, x, y);
             SetIsWalkable(actor.X, actor.Y, true);
             Game.ItemsTiles[actor.X, actor.Y] = null;
             Game.ItemsTiles[x, y] = actor;
@@ -252,6 +280,20 @@ public class DungeonMap:Map
         Player player = Game.Player;
 
         return StairsDown.X == player.X && StairsDown.Y == player.Y;
+    }
+
+    private void PickUpTreasure(Actor actor, int x, int y)
+    {
+        List<TreasurePile> treasureAtLocation = _treasurePiles.Where(g => g.X == x && g.Y == y).ToList();
+        foreach (TreasurePile treasurePile in treasureAtLocation)
+        {
+            if (treasurePile.Treasure.PickUp(actor))
+            {
+                GameObject.Destroy(Game.ItemsTiles[x, y].go);
+                Game.ItemsTiles[x, y] = null;
+                _treasurePiles.Remove(treasurePile);
+            }
+        }
     }
 
 }

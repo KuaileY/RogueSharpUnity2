@@ -10,8 +10,8 @@ public static class ActorGenerator
     {
         Pool<Monster> monsterPool = new Pool<Monster>();
         monsterPool.Add(Kobold.Create(level), 25);
-//         monsterPool.Add(Ooze.Create(level), 25);
-//         monsterPool.Add(Goblin.Create(level), 50);
+        monsterPool.Add(Ooze.Create(level), 25);
+        monsterPool.Add(Goblin.Create(level), 50);
 
         Monster monster = monsterPool.Get();
         monster.X = location.X;
